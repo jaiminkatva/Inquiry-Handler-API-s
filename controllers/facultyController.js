@@ -1,32 +1,45 @@
 import Counselor from "../models/Counselor.js";
 import Inquiry from "../models/Inquiry.js";
+import Faculty from "../models/Faculty.js";
 import getNextSequenceValue from "../utils/autoIncrement.js";
 
 export const addInquiry = async (req, res) => {
   try {
     console.log(req.user.id);
+
     const { email, ...otherData } = req.body;
 
     if (!email) {
       return res.status(400).json({ error: "Email is required." });
     }
 
+    // Check if email already exists
     const existingInquiry = await Inquiry.findOne({ email });
     if (existingInquiry) {
       return res.status(400).json({ error: "Email already exists." });
     }
 
+    // Get the Faculty who is filling the form
+    const faculty = await Faculty.findById(req.user.id);
+    if (!faculty || !faculty.createdBy) {
+      return res
+        .status(400)
+        .json({ error: "Faculty or associated college not found." });
+    }
+
+    // Get the next form number
     const nextId = await getNextSequenceValue("userId");
     if (!nextId) {
       return res.status(500).json({ error: "Failed to generate form number." });
     }
 
-    // Prepare inquiry data
+    // Prepare inquiry data with college = faculty.createdBy
     const inquiryData = {
       ...otherData,
       email,
       formNo: nextId,
       formFillBy: req.user.id,
+      college: faculty.createdBy,
     };
 
     const newInquiry = new Inquiry(inquiryData);
@@ -47,7 +60,9 @@ export const getFacultyInquiry = async (req, res) => {
   try {
     const getData = await Inquiry.find({ formFillBy: req.user.id })
       .select("-password") // Exclude password from Inquiry schema
-      .populate("formFillBy", "facultyName");
+      .populate("formFillBy", "facultyName")
+      .populate("college", "collegeName")
+      .populate("counselorName", "counselorName");
     res.status(200).json({ my_total_data: getData.length, inquiry: getData });
   } catch (error) {
     console.log(error);
@@ -85,12 +100,10 @@ export const appointInquiry = async (req, res) => {
 
     // Ensure the Counselor's createdBy matches Faculty's createdBy
     if (counselor.createdBy.toString() !== faculty.createdBy.toString()) {
-      return res
-        .status(403)
-        .json({
-          message:
-            "Unauthorized appointment: Counselor and Faculty must have the same createdBy",
-        });
+      return res.status(403).json({
+        message:
+          "Unauthorized appointment: Counselor and Faculty must have the same createdBy",
+      });
     }
 
     // Update Inquiry with the appointed counselor

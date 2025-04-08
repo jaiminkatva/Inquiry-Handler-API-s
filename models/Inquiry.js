@@ -28,7 +28,7 @@ const inquirySchema = new mongoose.Schema({
   },
   referenceName: {
     type: String,
-  }, 
+  },
   priority_one: {
     type: String,
   },

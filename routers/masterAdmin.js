@@ -1,7 +1,6 @@
 import { Router } from "express";
 import {
   addCollege,
-  addMasterAdmin,
   showCollege,
   deleteCollege,
   showFaculty,

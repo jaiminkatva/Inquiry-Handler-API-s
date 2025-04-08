@@ -3,6 +3,7 @@ import express from "express";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import cors from "cors";
 dotenv.config();
 
 const app = express();
@@ -24,6 +25,14 @@ import {
 // Middlewares
 app.use(express.json());
 app.use(morgan("dev"));
+
+const corsOptions ={
+  origin:'http://localhost:3000', 
+  credentials:true,            //access-control-allow-credentials:true
+  optionSuccessStatus:200
+}
+
+app.use(cors(corsOptions));
 
 // Root Router
 app.get("/", async (req, res) => {
@@ -63,7 +72,8 @@ const start = () => {
   try {
     mongoose
       .connect(
-        "mongodb+srv://admin:1234@cluster0.mgxihpr.mongodb.net/inquiry-handler-api?retryWrites=true&w=majority&appName=Cluster0",
+        // "mongodb+srv://admin:1234@clust.er0.mgxihpr.mongodb.net/inquiry-handler-api?retryWrites=true&w=majority&appName=Cluster0" ||
+        process.env.MONGO_URL,
         {
           useNewUrlParser: true,
           useUnifiedTopology: true,

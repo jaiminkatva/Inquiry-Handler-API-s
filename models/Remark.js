@@ -8,7 +8,7 @@ const remarkSchema = mongoose.Schema({
     type: Date,
     default: Date.now(),
   },
-  Student: {
+  student: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Inquiry",
   },
