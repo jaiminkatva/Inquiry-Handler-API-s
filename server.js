@@ -26,11 +26,11 @@ import {
 app.use(express.json());
 app.use(morgan("dev"));
 
-const corsOptions ={
-  origin:'http://localhost:3000', 
-  credentials:true,            //access-control-allow-credentials:true
-  optionSuccessStatus:200
-}
+const corsOptions = {
+  origin: "http://localhost:3000",
+  credentials: true, //access-control-allow-credentials:true
+  optionSuccessStatus: 200,
+};
 
 app.use(cors(corsOptions));
 
@@ -72,12 +72,12 @@ const start = () => {
   try {
     mongoose
       .connect(
-        // "mongodb+srv://admin:1234@clust.er0.mgxihpr.mongodb.net/inquiry-handler-api?retryWrites=true&w=majority&appName=Cluster0" ||
-        process.env.MONGO_URL,
+        "mongodb+srv://admin:1234@cluster0.mgxihpr.mongodb.net/inquiry-handler-api?retryWrites=true&w=majority&appName=Cluster0",
         {
           useNewUrlParser: true,
           useUnifiedTopology: true,
         }
+        
       )
       .then(() => {
         console.log("Database Connected");
