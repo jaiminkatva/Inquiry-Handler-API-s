@@ -29,14 +29,21 @@ const inquirySchema = new mongoose.Schema({
   referenceName: {
     type: String,
   },
+  course: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Course",
+  },
   priority_one: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Branch",
   },
   priority_two: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Branch",
   },
   priority_three: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Branch",
   },
   formFillBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -44,11 +51,12 @@ const inquirySchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["Pending", "Approved", "Rejected"],
+    enum: ["Pending", "In-Process", "Admitted", "Cancel"],
     default: "Pending",
   },
   admissionCategory: {
     type: String,
+    enum: ["ACPC", "MQ", "VQ", "TFW"],
   },
   seatNo: {
     type: String,

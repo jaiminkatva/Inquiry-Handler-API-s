@@ -65,7 +65,7 @@ const studentSchema = new mongoose.Schema({
     },
     group: {
       type: String,
-      enum: ["A", "B", "AB"],
+      enum: ["A", "B", "AB", "Commerce"],
     },
     result: {
       type: String,

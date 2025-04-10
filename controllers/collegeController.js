@@ -1,5 +1,5 @@
-import Branch from "../models/Branch.js"
-import Course from "../models/Course.js"
+import Branch from "../models/Branch.js";
+import Course from "../models/Course.js";
 
 export const createEntity = (Model) => async (req, res) => {
   try {
@@ -98,6 +98,229 @@ export const updateEntity = (Model) => async (req, res) => {
     res.status(500).json({ msg: "Server error" });
   }
 };
+
+// Branch
+export const addBranch = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ msg: "Unauthorized: No user ID found" });
+    }
+
+    const { branchName, course, seats, remaining_seats, filled_seats } =
+      req.body;
+
+    const existingBranch = await Branch.findOne({ branchName });
+    if (existingBranch) {
+      return res.status(400).json({ msg: "Branch already exists" });
+    }
+
+    const newBranch = new Branch({
+      branchName,
+      course,
+      seats,
+      remaining_seats,
+      filled_seats,
+      createdBy: req.user.id,
+    });
+
+    await newBranch.save();
+
+    res
+      .status(201)
+      .json({ msg: "Branch added successfully", branch: newBranch });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+export const showBranch = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ msg: "Unauthorized: No user ID found" });
+    }
+
+    const branches = await Branch.find({ createdBy: req.user.id })
+      .populate("createdBy", ["username", "collegeName"])
+      .populate("course", "courseName");
+
+    res.status(200).json({ branches });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+export const deleteBranch = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ msg: "Unauthorized: No user ID found" });
+    }
+
+    const branch = await Branch.findById(id);
+    if (!branch) {
+      return res.status(404).json({ msg: "Branch not found" });
+    }
+
+    if (branch.createdBy.toString() !== req.user.id) {
+      return res
+        .status(403)
+        .json({ msg: "Unauthorized to delete this branch" });
+    }
+
+    await Branch.findByIdAndDelete(id);
+    res.status(200).json({ msg: "Branch deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+export const editBranch = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { branchName, course, seats, remaining_seats, filled_seats } =
+      req.body;
+
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ msg: "Unauthorized: No user ID found" });
+    }
+
+    const branch = await Branch.findById(id);
+    if (!branch) {
+      return res.status(404).json({ msg: "Branch not found" });
+    }
+
+    if (branch.createdBy.toString() !== req.user.id) {
+      return res
+        .status(403)
+        .json({ msg: "Unauthorized to update this branch" });
+    }
+
+    if (branchName) branch.branchName = branchName;
+    if (course) branch.course = course;
+    if (seats) branch.seats = seats;
+    if (remaining_seats) branch.remaining_seats = remaining_seats;
+    if (filled_seats) branch.filled_seats = filled_seats;
+
+    await branch.save();
+
+    res.status(200).json({ msg: "Branch updated successfully", branch });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// Course
+export const addCourse = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ msg: "Unauthorized: No user ID found" });
+    }
+
+    const { courseName } = req.body;
+
+    const existingCourse = await Course.findOne({ courseName });
+    if (existingCourse) {
+      return res.status(400).json({ msg: "Course already exists" });
+    }
+
+    const newCourse = new Course({
+      courseName,
+      createdBy: req.user.id,
+    });
+
+    await newCourse.save();
+
+    res
+      .status(201)
+      .json({ msg: "Course added successfully", course: newCourse });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+export const showCourse = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ msg: "Unauthorized: No user ID found" });
+    }
+
+    const courses = await Course.find({ createdBy: req.user.id }).populate(
+      "createdBy",
+      ["username", "collegeName"]
+    );
+
+    res.status(200).json({ courses });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+export const deleteCourse = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ msg: "Unauthorized: No user ID found" });
+    }
+
+    const course = await Course.findById(id);
+    if (!course) {
+      return res.status(404).json({ msg: "Course not found" });
+    }
+
+    if (course.createdBy.toString() !== req.user.id) {
+      return res
+        .status(403)
+        .json({ msg: "Unauthorized to delete this course" });
+    }
+
+    await Course.findByIdAndDelete(id);
+    res.status(200).json({ msg: "Course deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+export const editCourse = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { courseName } = req.body;
+
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ msg: "Unauthorized: No user ID found" });
+    }
+
+    const course = await Course.findById(id);
+    if (!course) {
+      return res.status(404).json({ msg: "Course not found" });
+    }
+
+    if (course.createdBy.toString() !== req.user.id) {
+      return res
+        .status(403)
+        .json({ msg: "Unauthorized to update this course" });
+    }
+
+    if (courseName) course.courseName = courseName;
+
+    await course.save();
+
+    res.status(200).json({ msg: "Course updated successfully", course });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+
 
 // // Faculty Controller
 // export const addFaculty = async (req, res) => {
@@ -335,221 +558,3 @@ export const updateEntity = (Model) => async (req, res) => {
 //     res.status(500).json({ msg: "Server error" });
 //   }
 // };
-
-// Branch
-export const addBranch = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ msg: "Unauthorized: No user ID found" });
-    }
-
-    const { branchName, seats, remaining_seats, filled_seats } = req.body;
-
-    const existingBranch = await Branch.findOne({ branchName });
-    if (existingBranch) {
-      return res.status(400).json({ msg: "Branch already exists" });
-    }
-
-    const newBranch = new Branch({
-      branchName,
-      seats,
-      remaining_seats,
-      filled_seats,
-      createdBy: req.user.id,
-    });
-
-    await newBranch.save();
-
-    res
-      .status(201)
-      .json({ msg: "Branch added successfully", branch: newBranch });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ msg: "Server error" });
-  }
-};
-
-export const showBranch = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ msg: "Unauthorized: No user ID found" });
-    }
-
-    const branches = await Branch.find({ createdBy: req.user.id }).populate(
-      "createdBy",
-      ["username", "collegeName"]
-    );
-
-    res.status(200).json({ branches });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ msg: "Server error" });
-  }
-};
-
-export const deleteBranch = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ msg: "Unauthorized: No user ID found" });
-    }
-
-    const branch = await Branch.findById(id);
-    if (!branch) {
-      return res.status(404).json({ msg: "Branch not found" });
-    }
-
-    if (branch.createdBy.toString() !== req.user.id) {
-      return res
-        .status(403)
-        .json({ msg: "Unauthorized to delete this branch" });
-    }
-
-    await Branch.findByIdAndDelete(id);
-    res.status(200).json({ msg: "Branch deleted successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ msg: "Server error" });
-  }
-};
-
-export const editBranch = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { branchName, seats, remaining_seats, filled_seats } = req.body;
-
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ msg: "Unauthorized: No user ID found" });
-    }
-
-    const branch = await Branch.findById(id);
-    if (!branch) {
-      return res.status(404).json({ msg: "Branch not found" });
-    }
-
-    if (branch.createdBy.toString() !== req.user.id) {
-      return res
-        .status(403)
-        .json({ msg: "Unauthorized to update this branch" });
-    }
-
-    if (branchName) branch.branchName = branchName;
-    if (seats) branch.seats = seats;
-    if (remaining_seats) branch.remaining_seats = remaining_seats;
-    if (filled_seats) branch.filled_seats = filled_seats;
-
-    await branch.save();
-
-    res.status(200).json({ msg: "Branch updated successfully", branch });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ msg: "Server error" });
-  }
-};
-
-// Course
-export const addCourse = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ msg: "Unauthorized: No user ID found" });
-    }
-
-    const { courseName } = req.body;
-
-    const existingCourse = await Course.findOne({ courseName });
-    if (existingCourse) {
-      return res.status(400).json({ msg: "Course already exists" });
-    }
-
-    const newCourse = new Course({
-      courseName,
-      createdBy: req.user.id,
-    });
-
-    await newCourse.save();
-
-    res
-      .status(201)
-      .json({ msg: "Course added successfully", course: newCourse });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ msg: "Server error" });
-  }
-};
-
-export const showCourse = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ msg: "Unauthorized: No user ID found" });
-    }
-
-    const courses = await Course.find({ createdBy: req.user.id }).populate(
-      "createdBy",
-      ["username", "collegeName"]
-    );
-
-    res.status(200).json({ courses });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ msg: "Server error" });
-  }
-};
-
-export const deleteCourse = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ msg: "Unauthorized: No user ID found" });
-    }
-
-    const course = await Course.findById(id);
-    if (!course) {
-      return res.status(404).json({ msg: "Course not found" });
-    }
-
-    if (course.createdBy.toString() !== req.user.id) {
-      return res
-        .status(403)
-        .json({ msg: "Unauthorized to delete this course" });
-    }
-
-    await Course.findByIdAndDelete(id);
-    res.status(200).json({ msg: "Course deleted successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ msg: "Server error" });
-  }
-};
-
-export const editCourse = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { courseName } = req.body;
-
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ msg: "Unauthorized: No user ID found" });
-    }
-
-    const course = await Course.findById(id);
-    if (!course) {
-      return res.status(404).json({ msg: "Course not found" });
-    }
-
-    if (course.createdBy.toString() !== req.user.id) {
-      return res
-        .status(403)
-        .json({ msg: "Unauthorized to update this course" });
-    }
-
-    if (courseName) course.courseName = courseName;
-
-    await course.save();
-
-    res.status(200).json({ msg: "Course updated successfully", course });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ msg: "Server error" });
-  }
-};

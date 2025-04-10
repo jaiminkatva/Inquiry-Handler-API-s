@@ -62,7 +62,11 @@ export const getFacultyInquiry = async (req, res) => {
       .select("-password") // Exclude password from Inquiry schema
       .populate("formFillBy", "facultyName")
       .populate("college", "collegeName")
-      .populate("counselorName", "counselorName");
+      .populate("counselorName", "counselorName")
+      .populate("course", "courseName")
+      .populate("priority_one", "branchName")
+      .populate("priority_two", "branchName")
+      .populate("priority_three", "branchName");
     res.status(200).json({ my_total_data: getData.length, inquiry: getData });
   } catch (error) {
     console.log(error);

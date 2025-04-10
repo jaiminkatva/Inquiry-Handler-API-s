@@ -6,6 +6,10 @@ const branchSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  course: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Course",
+  },
   seats: {
     type: Number,
     required: true,
