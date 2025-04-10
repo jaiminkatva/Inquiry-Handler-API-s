@@ -26,13 +26,19 @@ import {
 app.use(express.json());
 app.use(morgan("dev"));
 
-const corsOptions = {
-  origin: "http://localhost:5173",
-  credentials: true, //access-control-allow-credentials:true
-  optionSuccessStatus: 200,
-};
+const allowedOrigins = ["http://localhost:3000", "http://localhost:5173"];
 
-app.use(cors(corsOptions));
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true, // if you're using cookies or sessions
+}));
+
 
 // Root Router
 app.get("/", async (req, res) => {
