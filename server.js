@@ -29,6 +29,23 @@ import {
 app.use(express.json());
 app.use(morgan("dev"));
 
+
+const allowedOrigins = ["http://localhost:3000", "http://localhost:5173"];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // if you're using cookies or sessions
+  })
+);
+
+
 // Handle __dirname in ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -66,22 +83,6 @@ app.use("*", (req, res) => {
 
 // Error Middleware
 app.use(errorHandlerMiddleware);
-
-
-const allowedOrigins = ["http://localhost:3000", "http://localhost:5173"];
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true, // if you're using cookies or sessions
-  })
-);
 
 ConfigConnect();
 
