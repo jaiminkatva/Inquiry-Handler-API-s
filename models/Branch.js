@@ -25,4 +25,12 @@ const branchSchema = new mongoose.Schema({
   },
 });
 
+branchSchema.pre("save", function (next) {
+  if (this.isNew) {
+    this.remaining_seats = this.seats;
+    this.filled_seats = 0;
+  }
+  next();
+});
+
 export default mongoose.model("Branch", branchSchema);

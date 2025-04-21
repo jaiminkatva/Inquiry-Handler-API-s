@@ -4,12 +4,14 @@ import {
   changeAdmissionStatus,
   getAppointedInquiry,
   getSingleInquiry,
+  getStudent,
 } from "../controllers/counselorController.js";
 const router = express.Router();
 
 router.get("/showAppointedInquiries", getAppointedInquiry);
+router.get("/student", getStudent);
 router.get("/showAppointedInquiries/:id", getSingleInquiry);
 router.post("/remarks/:id", addRemarks);
-router.patch("/changeStatus", changeAdmissionStatus);
+router.patch("/changeStatus/", changeAdmissionStatus);
 
 export default router;

@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 
 const studentSchema = new mongoose.Schema({
+  inquiry_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Inquiry",
+  },
   photo: {
     type: String, // Store image URL or file path
   },
@@ -8,7 +12,7 @@ const studentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  permanentAddress: {
+  address: {
     type: String,
     required: true,
   },
@@ -16,7 +20,7 @@ const studentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  fatherMobileNo: {
+  parentsMobileNo: {
     type: String,
   },
   dateOfBirth: {
@@ -49,6 +53,10 @@ const studentSchema = new mongoose.Schema({
     unique: true,
     required: true,
   },
+  confirmBranch: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Branch",
+  },
   hscDetails: {
     board: {
       type: String,
@@ -78,6 +86,18 @@ const studentSchema = new mongoose.Schema({
   date: {
     type: Date,
     default: Date.now,
+  },
+  college: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "College",
+  },
+  counselorName: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Counselor",
+  },
+  role: {
+    type: String,
+    default: "Student",
   },
 });
 

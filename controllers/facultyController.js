@@ -2,6 +2,8 @@ import Counselor from "../models/Counselor.js";
 import Inquiry from "../models/Inquiry.js";
 import Faculty from "../models/Faculty.js";
 import getNextSequenceValue from "../utils/autoIncrement.js";
+import Branch from "../models/Branch.js";
+import Course from "../models/Course.js";
 
 export const addInquiry = async (req, res) => {
   try {
@@ -13,13 +15,11 @@ export const addInquiry = async (req, res) => {
       return res.status(400).json({ error: "Email is required." });
     }
 
-    // Check if email already exists
     const existingInquiry = await Inquiry.findOne({ email });
     if (existingInquiry) {
       return res.status(400).json({ error: "Email already exists." });
     }
 
-    // Get the Faculty who is filling the form
     const faculty = await Faculty.findById(req.user.id);
     if (!faculty || !faculty.createdBy) {
       return res
@@ -27,13 +27,11 @@ export const addInquiry = async (req, res) => {
         .json({ error: "Faculty or associated college not found." });
     }
 
-    // Get the next form number
     const nextId = await getNextSequenceValue("userId");
     if (!nextId) {
       return res.status(500).json({ error: "Failed to generate form number." });
     }
 
-    // Prepare inquiry data with college = faculty.createdBy
     const inquiryData = {
       ...otherData,
       email,
@@ -120,5 +118,52 @@ export const appointInquiry = async (req, res) => {
   } catch (error) {
     console.error("Error appointing counselor:", error);
     res.status(500).json({ message: "Server Error" });
+  }
+};
+
+export const showAllBranch = async (req, res) => {
+  try {
+    const loginFaculty = await Faculty.findById(req.user.id);
+    const collegeId = loginFaculty.createdBy;
+    console.log(collegeId);
+    const branches = await Branch.find({
+      createdBy: loginFaculty.createdBy,
+    }).populate("course", "courseName");
+    res
+      .status(200)
+      .json({ total_branches: branches.length, branches: branches });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ msg: "server error" });
+  }
+};
+
+export const showAllCourse = async (req, res) => {
+  try {
+    const loginFaculty = await Faculty.findById(req.user.id);
+    const collegeId = loginFaculty.createdBy;
+    console.log(collegeId);
+    const courses = await Course.find({ createdBy: loginFaculty.createdBy });
+    res.status(200).json({ total_courses: courses.length, courses: courses });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ msg: "server error" });
+  }
+};
+
+export const showAllCounselor = async (req, res) => {
+  try {
+    const loginFaculty = await Faculty.findById(req.user.id);
+    const collegeId = loginFaculty.createdBy;
+    console.log(collegeId);
+    const counselors = await Counselor.find({
+      createdBy: loginFaculty.createdBy,
+    });
+    res
+      .status(200)
+      .json({ total_counselor: counselors.length, counselors: counselors });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ msg: "server error" });
   }
 };

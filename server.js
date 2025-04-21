@@ -2,8 +2,11 @@ import "express-async-errors";
 import express from "express";
 import morgan from "morgan";
 import dotenv from "dotenv";
-import mongoose from "mongoose";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
+import ConfigConnect from "./config/dbConnect.js";
+
 dotenv.config();
 
 const app = express();
@@ -26,19 +29,12 @@ import {
 app.use(express.json());
 app.use(morgan("dev"));
 
-const allowedOrigins = ["http://localhost:3000", "http://localhost:5173"];
+// Handle __dirname in ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true, // if you're using cookies or sessions
-}));
-
+// Serve static folder (e.g., /uploads)
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Root Router
 app.get("/", async (req, res) => {
@@ -71,33 +67,26 @@ app.use("*", (req, res) => {
 // Error Middleware
 app.use(errorHandlerMiddleware);
 
-const port = process.env.PORT || 3000;
 
-// Server Listening and Mongo DB Connection
-const start = () => {
-  try {
-    mongoose
-      .connect(
-        "mongodb+srv://admin:1234@cluster0.mgxihpr.mongodb.net/inquiry-handler-api?retryWrites=true&w=majority&appName=Cluster0",
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true,
-        }
-        
-      )
-      .then(() => {
-        console.log("Database Connected");
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-    app.listen(port, () => {
-      console.log(`server start on port number ${port}`);
-    });
-  } catch (error) {
-    console.log(error);
-    process.exit(1);
-  }
-};
+const allowedOrigins = ["http://localhost:3000", "http://localhost:5173"];
 
-start();
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // if you're using cookies or sessions
+  })
+);
+
+ConfigConnect();
+
+const port = 3000
+
+app.listen(port, () => {
+  console.log(`server start on port number ${port}`);
+});

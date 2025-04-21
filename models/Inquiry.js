@@ -89,6 +89,10 @@ const inquirySchema = new mongoose.Schema({
     type: String,
     enum: ["Open", "SEBC", "SC", "ST", "PH", "EWS"],
   },
+  UDISE_NO: {
+    type: String,
+    require: true,
+  },
   aadharNo: {
     type: String,
     unique: true,

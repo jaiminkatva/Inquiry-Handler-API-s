@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import College from "../models/College.js";
 import Faculty from "../models/Faculty.js";
 import Counselor from "../models/Counselor.js";
+import Student from "../models/Student.js";
 
 export const loginAdmin = async (req, res) => {
   try {
@@ -127,6 +128,34 @@ export const loginCounselor = async (req, res) => {
     );
 
     res.status(200).json({ token, counselor });
+  } catch (error) {
+    console.error("❌ Error during login:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+export const loginStudent = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const student = await Student.findOne({ email });
+
+    if (!student)
+      return res.status(401).json({ message: "Invalid email or password" });
+
+    const isMatch = await bcrypt.findOne(student.password === password);
+    if (!isMatch)
+      return res.status(401).json({ message: "Invalid email or password" });
+
+    const token = jwt.sign(
+      { id: student._id, role: student.role },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: process.env.JWT_EXPIRES_IN,
+      }
+    );
+
+    res.status(200).json({ token, student });
   } catch (error) {
     console.error("❌ Error during login:", error);
     res.status(500).json({ message: "Server error", error });
