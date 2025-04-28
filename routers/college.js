@@ -12,6 +12,10 @@ import {
   deleteBranch,
   editCourse,
   deleteCourse,
+  getAllInquiryOfCollege,
+  getSingleInquiry,
+  updateInquiry,
+  deleteInquiry,
 } from "../controllers/collegeController.js";
 import Faculty from "../models/Faculty.js";
 import Counselor from "../models/Counselor.js";
@@ -30,8 +34,14 @@ entities.forEach(({ path, model }) => {
   router.delete(`/${path}/:id`, deleteEntity(model));
 });
 
+router.get("/inquiries", getAllInquiryOfCollege);
+router
+  .route("/inquiry/:id")
+  .get(getSingleInquiry)
+  .put(updateInquiry)
+  .delete(deleteInquiry);
 router.route("/branch").post(addBranch).get(showBranch);
-router.route("/branch/:id").put(editBranch).delete(deleteBranch);
+router.route("/branch/:id").patch(editBranch).delete(deleteBranch);
 router.route("/course").post(addCourse).get(showCourse);
 router.route("/course/:id").put(editCourse).delete(deleteCourse);
 

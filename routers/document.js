@@ -1,5 +1,5 @@
 import express from 'express';
-import upload from '../middleware/upload.js';
+import upload from '../middlewares/upload.js';
 import {
   uploadDocuments,
 } from '../controllers/studentController.js';
@@ -17,8 +17,8 @@ const fileFields = [
 // Upload documents
 router.post('/upload', upload.fields(fileFields), uploadDocuments);
 
-router.patch('/:id/verify', verifyDocumentStatus);
+// router.patch('/:id/verify', verifyDocumentStatus);
 
-router.patch('/:id/status', updateOverallStatus);
+// router.patch('/:id/status', updateOverallStatus);
 
 export default router;

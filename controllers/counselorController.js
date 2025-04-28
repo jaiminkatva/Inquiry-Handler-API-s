@@ -1,6 +1,7 @@
 import Inquiry from "../models/Inquiry.js";
 import Remark from "../models/Remark.js";
 import Student from "../models/Student.js";
+import Branch from "../models/Branch.js";
 
 export const getAppointedInquiry = async (req, res) => {
   try {
@@ -49,7 +50,7 @@ export const addRemarks = async (req, res) => {
 
 export const changeAdmissionStatus = async (req, res) => {
   try {
-    const { inquiryId, status } = req.body;
+    const { confirmBranch, inquiryId, status } = req.body;
 
     const inquiry = await Inquiry.findById(inquiryId);
     if (!inquiry) {
@@ -76,7 +77,7 @@ export const changeAdmissionStatus = async (req, res) => {
           aadharNo: inquiry.aadharNo,
           email: inquiry.email,
           password: inquiry.password,
-          confirmBranch: inquiry.priority_one,
+          confirmBranch: confirmBranch,
           hscDetails: {
             board: inquiry.board,
             result: inquiry.result,
@@ -101,8 +102,23 @@ export const changeAdmissionStatus = async (req, res) => {
         inquiry.status = "Admitted";
         await inquiry.save();
 
-        // Find the Branch
-        const branch = await Branch.findById(inquiry.priority_one);
+        // Find the student associated with this inquiry
+        const student = await Student.findOne({ inquiry_id: inquiry._id });
+        if (!student) {
+          return res
+            .status(404)
+            .json({ message: "Student not found for this inquiry" });
+        }
+
+        // Validate confirmBranch exists
+        if (!student.confirmBranch) {
+          return res
+            .status(400)
+            .json({ message: "confirmBranch not set for student" });
+        }
+
+        // Find the selected Branch using confirmBranch
+        const branch = await Branch.findById(student.confirmBranch);
         if (!branch) {
           return res.status(404).json({ message: "Branch not found" });
         }

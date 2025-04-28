@@ -1,5 +1,6 @@
 import Branch from "../models/Branch.js";
 import Course from "../models/Course.js";
+import Inquiry from "../models/Inquiry.js";
 
 export const createEntity = (Model) => async (req, res) => {
   try {
@@ -34,7 +35,7 @@ export const getEntities = (Model) => async (req, res) => {
       "createdBy",
       ["username", "collegeName"]
     );
-    res.status(200).json({ Data: entities });
+    res.status(200).json({ Total_Data: entities.length, Data: entities });
   } catch (error) {
     console.error(error);
     res.status(500).json({ msg: "Server error" });
@@ -320,241 +321,101 @@ export const editCourse = async (req, res) => {
   }
 };
 
+// Update Inquiry
+export const updateInquiry = async (req, res) => {
+  try {
+    const { id } = req.params;
 
+    // Find the inquiry and check if it belongs to the current college
+    const inquiry = await Inquiry.findOne({ _id: id, college: req.user.id });
 
-// // Faculty Controller
-// export const addFaculty = async (req, res) => {
-//   try {
-//     // Ensure user ID is extracted from token
-//     if (!req.user || !req.user.id) {
-//       return res.status(401).json({ msg: "Unauthorized: No user ID found" });
-//     }
+    if (!inquiry) {
+      return res
+        .status(404)
+        .json({ message: "Inquiry not found or unauthorized access" });
+    }
 
-//     const { userName, facultyName, email, mobileNo, password } = req.body;
+    // Update inquiry
+    const updatedInquiry = await Inquiry.findByIdAndUpdate(id, req.body, {
+      new: true,
+    });
 
-//     // Check if faculty already exists
-//     const existingFaculty = await Faculty.findOne({ email });
-//     if (existingFaculty) {
-//       return res.status(400).json({ msg: "Faculty already exists" });
-//     }
+    res.status(200).json({
+      message: "Inquiry updated successfully",
+      inquiry: updatedInquiry,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
 
-//     // Create new Faculty
-//     const newFaculty = new Faculty({
-//       userName,
-//       facultyName,
-//       email,
-//       mobileNo,
-//       password,
-//       createdBy: req.user.id, // Assigning createdBy from token
-//     });
+// Get All Inquiries of College
+export const getAllInquiryOfCollege = async (req, res) => {
+  try {
+    const inquiries = await Inquiry.find({ college: req.user.id })
+      .populate("course")
+      .populate("priority_one")
+      .populate("priority_two")
+      .populate("priority_three")
+      .populate("formFillBy")
+      .populate("college")
+      .populate("counselorName");
 
-//     // Save to database
-//     await newFaculty.save();
+    res.status(200).json({ inquiries });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
 
-//     res
-//       .status(201)
-//       .json({ msg: "Faculty added successfully", faculty: newFaculty });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ msg: "Server error" });
-//   }
-// };
+// Get Single Inquiry
+export const getSingleInquiry = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-// export const showFaculty = async (req, res) => {
-//   try {
-//     // Ensure user ID is available from token
-//     if (!req.user || !req.user.id) {
-//       return res.status(401).json({ msg: "Unauthorized: No user ID found" });
-//     }
+    const inquiry = await Inquiry.findOne({ _id: id, college: req.user.id })
+      .populate("course")
+      .populate("priority_one")
+      .populate("priority_two")
+      .populate("priority_three")
+      .populate("formFillBy")
+      .populate("college")
+      .populate("counselorName");
 
-//     // Fetch all faculty members created by this user
-//     const faculties = await Faculty.find({ createdBy: req.user.id }).populate(
-//       "createdBy",
-//       ["username", "collegeName"]
-//     );
+    if (!inquiry) {
+      return res
+        .status(404)
+        .json({ message: "Inquiry not found or unauthorized access" });
+    }
 
-//     res.status(200).json({ faculties });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ msg: "Server error" });
-//   }
-// };
+    res.status(200).json({ inquiry });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
 
-// export const deleteFaculty = async (req, res) => {
-//   try {
-//     const { id } = req.params;
+// Delete Single Inquiry
+export const deleteInquiry = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-//     // Ensure user ID is available from token
-//     if (!req.user || !req.user.id) {
-//       return res.status(401).json({ msg: "Unauthorized: No user ID found" });
-//     }
+    // Check if the inquiry exists and belongs to the current college
+    const inquiry = await Inquiry.findOne({ _id: id, college: req.user.id });
 
-//     // Find faculty by ID
-//     const faculty = await Faculty.findById(id);
-//     if (!faculty) {
-//       return res.status(404).json({ msg: "Faculty not found" });
-//     }
+    if (!inquiry) {
+      return res
+        .status(404)
+        .json({ message: "Inquiry not found or unauthorized access" });
+    }
 
-//     // Check if the logged-in user is the creator
-//     if (faculty.createdBy.toString() !== req.user.id) {
-//       return res
-//         .status(403)
-//         .json({ msg: "Unauthorized to delete this faculty" });
-//     }
+    // Delete the inquiry
+    await Inquiry.findByIdAndDelete(id);
 
-//     // Delete faculty
-//     await Faculty.findByIdAndDelete(id);
-//     res.status(200).json({ msg: "Faculty deleted successfully" });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ msg: "Server error" });
-//   }
-// };
-
-// export const editFaculty = async (req, res) => {
-//   try {
-//     const { id } = req.params; // Get faculty ID from URL params
-//     const { userName, facultyName, email, mobileNo } = req.body;
-
-//     // Ensure user ID is available from token
-//     if (!req.user || !req.user.id) {
-//       return res.status(401).json({ msg: "Unauthorized: No user ID found" });
-//     }
-
-//     // Find faculty by ID
-//     const faculty = await Faculty.findById(id);
-//     if (!faculty) {
-//       return res.status(404).json({ msg: "Faculty not found" });
-//     }
-
-//     // Check if the logged-in user is the creator
-//     if (faculty.createdBy.toString() !== req.user.id) {
-//       return res
-//         .status(403)
-//         .json({ msg: "Unauthorized to update this faculty" });
-//     }
-
-//     // Update only the allowed fields
-//     if (userName) faculty.userName = userName;
-//     if (facultyName) faculty.facultyName = facultyName;
-//     if (email) faculty.email = email;
-//     if (mobileNo) faculty.mobileNo = mobileNo;
-
-//     // Save updated faculty
-//     await faculty.save();
-
-//     res.status(200).json({ msg: "Faculty updated successfully", faculty });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ msg: "Server error" });
-//   }
-// };
-
-// // Counselor
-// export const addCounselor = async (req, res) => {
-//   try {
-//     if (!req.user || !req.user.id) {
-//       return res.status(401).json({ msg: "Unauthorized: No user ID found" });
-//     }
-
-//     const { userName, counselorName, email, mobileNo, password } = req.body;
-
-//     const existingCounselor = await Counselor.findOne({ email });
-//     if (existingCounselor) {
-//       return res.status(400).json({ msg: "Counselor already exists" });
-//     }
-
-//     const newCounselor = new Counselor({
-//       userName,
-//       counselorName,
-//       email,
-//       mobileNo,
-//       password,
-//       createdBy: req.user.id,
-//     });
-
-//     await newCounselor.save();
-//     res
-//       .status(201)
-//       .json({ msg: "Counselor added successfully", counselor: newCounselor });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ msg: "Server error" });
-//   }
-// };
-
-// export const showCounselor = async (req, res) => {
-//   try {
-//     if (!req.user || !req.user.id) {
-//       return res.status(401).json({ msg: "Unauthorized: No user ID found" });
-//     }
-
-//     const counselors = await Counselor.find({
-//       createdBy: req.user.id,
-//     }).populate("createdBy", ["username", "collegeName"]);
-//     res.status(200).json({ counselors });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ msg: "Server error" });
-//   }
-// };
-
-// export const deleteCounselor = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-
-//     if (!req.user || !req.user.id) {
-//       return res.status(401).json({ msg: "Unauthorized: No user ID found" });
-//     }
-
-//     const counselor = await Counselor.findById(id);
-//     if (!counselor) {
-//       return res.status(404).json({ msg: "Counselor not found" });
-//     }
-
-//     if (counselor.createdBy.toString() !== req.user.id) {
-//       return res
-//         .status(403)
-//         .json({ msg: "Unauthorized to delete this counselor" });
-//     }
-
-//     await Counselor.findByIdAndDelete(id);
-//     res.status(200).json({ msg: "Counselor deleted successfully" });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ msg: "Server error" });
-//   }
-// };
-
-// export const editCounselor = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { userName, counselorName, email, mobileNo } = req.body;
-
-//     if (!req.user || !req.user.id) {
-//       return res.status(401).json({ msg: "Unauthorized: No user ID found" });
-//     }
-
-//     const counselor = await Counselor.findById(id);
-//     if (!counselor) {
-//       return res.status(404).json({ msg: "Counselor not found" });
-//     }
-
-//     if (counselor.createdBy.toString() !== req.user.id) {
-//       return res
-//         .status(403)
-//         .json({ msg: "Unauthorized to update this counselor" });
-//     }
-
-//     if (userName) counselor.userName = userName;
-//     if (counselorName) counselor.counselorName = counselorName;
-//     if (email) counselor.email = email;
-//     if (mobileNo) counselor.mobileNo = mobileNo;
-
-//     await counselor.save();
-//     res.status(200).json({ msg: "Counselor updated successfully", counselor });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ msg: "Server error" });
-//   }
-// };
+    res.status(200).json({ message: "Inquiry deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};

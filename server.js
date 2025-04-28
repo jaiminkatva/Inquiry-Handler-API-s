@@ -18,6 +18,8 @@ import landingRoute from "./routers/landing.js";
 import counselorRouter from "./routers/counselor.js";
 import authRouter from "./routers/authRouter.js";
 import facultyRouter from "./routers/faculty.js";
+import documentRouter from "./routers/document.js";
+import studentRouter from "./routers/student.js";
 
 import errorHandlerMiddleware from "./middlewares/errorHandlerMiddleware.js";
 import {
@@ -28,7 +30,6 @@ import {
 // Middlewares
 app.use(express.json());
 app.use(morgan("dev"));
-
 
 const allowedOrigins = ["http://localhost:3000", "http://localhost:5173"];
 
@@ -44,7 +45,6 @@ app.use(
     credentials: true, // if you're using cookies or sessions
   })
 );
-
 
 // Handle __dirname in ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -74,6 +74,7 @@ app.use(
   counselorRouter
 );
 app.use("/", landingRoute);
+app.use("/doc", documentRouter);
 app.use("/auth", authRouter);
 
 // Not Found Middleware
@@ -86,7 +87,7 @@ app.use(errorHandlerMiddleware);
 
 ConfigConnect();
 
-const port = 3000
+const port = 3000;
 
 app.listen(port, () => {
   console.log(`server start on port number ${port}`);

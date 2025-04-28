@@ -143,8 +143,7 @@ export const loginStudent = async (req, res) => {
     if (!student)
       return res.status(401).json({ message: "Invalid email or password" });
 
-    const isMatch = await bcrypt.findOne(student.password === password);
-    if (!isMatch)
+    if (student.password !== password)
       return res.status(401).json({ message: "Invalid email or password" });
 
     const token = jwt.sign(

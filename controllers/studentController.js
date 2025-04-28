@@ -1,6 +1,10 @@
 // controllers/studentDocuments.controller.js
 import Document from "../models/Document.js";
 
+export const studentProfile = async (req, res) => {
+  res.status(200).json({ msg: "Student Profile" });
+};
+
 export const uploadDocuments = async (req, res) => {
   try {
     const { studentId } = req.body;

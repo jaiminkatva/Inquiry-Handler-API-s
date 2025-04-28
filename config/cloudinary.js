@@ -13,10 +13,22 @@ cloudinary.config({
 
 export const storage = new CloudinaryStorage({
   cloudinary,
-  params: {
-    folder: "student_documents",
-    format: async () => "png",
-    public_id: (req, file) => `${Date.now()}-${file.originalname}`,
+  params: async (req, file) => {
+    const isPDF = file.mimetype === "application/pdf";
+
+    return {
+      folder: "student_documents",
+      public_id: `${Date.now()}-${file.originalname}`,
+      resource_type: isPDF ? "raw" : "image",
+      format: isPDF ? "pdf" : "png",
+      transformation: !isPDF
+        ? [
+            { width: 1000, crop: "scale" },
+            { quality: "auto" },
+            { fetch_format: "auto" },
+          ]
+        : undefined,
+    };
   },
 });
 
