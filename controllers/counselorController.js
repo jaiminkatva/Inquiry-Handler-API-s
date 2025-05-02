@@ -2,6 +2,7 @@ import Inquiry from "../models/Inquiry.js";
 import Remark from "../models/Remark.js";
 import Student from "../models/Student.js";
 import Branch from "../models/Branch.js";
+import Document from "../models/Document.js";
 
 export const getAppointedInquiry = async (req, res) => {
   try {
@@ -173,5 +174,116 @@ export const getStudent = async (req, res) => {
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ msg: "server error", error });
+  }
+};
+
+export const getStudentWithDocuments = async (req, res) => {
+  try {
+    const student = await Student.findById(req.params.id)
+      .populate("confirmBranch", "name")
+      .populate("college", "name")
+      .populate("counselorName", "fullName email")
+      .lean();
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found.",
+        data: null,
+        statusCode: 404,
+      });
+    }
+
+    const documents = await Document.find({ studentId: req.params.id }).lean();
+
+    const studentData = {
+      ...student,
+      documents: documents.length > 0 ? documents : null,
+    };
+
+    res.status(200).json({
+      success: true,
+      message: "Student with documents fetched successfully.",
+      data: studentData,
+      statusCode: 200,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch student.",
+      data: null,
+      statusCode: 500,
+      error: err.message,
+    });
+  }
+};
+
+
+export const verifyStudentDocument = async (req, res) => {
+  const { id } = req.params;
+  const { field, verified } = req.body;
+
+  if (!field || typeof verified !== 'boolean') {
+    return res.status(400).json({
+      success: false,
+      message: 'Field and verified flag are required.',
+      data: null,
+      statusCode: 400,
+    });
+  }
+
+  try {
+    const update = {};
+    update[`${field}.verified`] = verified;
+
+    let updatedDoc = await Document.findByIdAndUpdate(
+      id,
+      { $set: update },
+      { new: true }
+    );
+
+    if (!updatedDoc) {
+      return res.status(404).json({
+        success: false,
+        message: 'Document not found.',
+        data: null,
+        statusCode: 404,
+      });
+    }
+
+    const requiredFields = [
+      'sscMarksheet',
+      'hscMarksheet',
+      'leavingCertificate',
+      'passportPhoto',
+      'adharCard',
+      'digitalSignature',
+    ];
+
+    const allRequiredVerified = requiredFields.every(
+      field => updatedDoc[field]?.verified === true
+    );
+
+    const newStatus = allRequiredVerified ? 'approved' : 'reupload';
+
+    if (updatedDoc.status !== newStatus) {
+      updatedDoc.status = newStatus;
+      await updatedDoc.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Field "${field}" marked as ${verified ? 'verified' : 'unverified'}.`,
+      data: updatedDoc,
+      statusCode: 200,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to verify document.',
+      data: null,
+      statusCode: 500,
+      error: err.message,
+    });
   }
 };

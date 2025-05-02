@@ -73,6 +73,7 @@ app.use(
   authorizeRole("Counselor"),
   counselorRouter
 );
+app.use("/student", authenticateToken, authorizeRole("Student"), studentRouter);
 app.use("/", landingRoute);
 app.use("/doc", documentRouter);
 app.use("/auth", authRouter);
