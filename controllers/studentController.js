@@ -31,6 +31,33 @@ export const studentProfile = async (req, res) => {
   }
 };
 
+export const getDocuments = async (req, res) => {
+  try {
+    const documents = await Document.find({ studentId: req.user.id }).populate(
+      "studentId",
+      "fullName"
+    );
+
+    if (!documents) {
+      return res.status(404).json({
+        success: false,
+        message: "Documents not found",
+        data: null,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Student documents fetched successfully",
+      data: documents,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", data: error.message });
+  }
+};
+
 export const updateStudentProfile = async (req, res) => {
   try {
     const updates = req.body;

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  getDocuments,
   studentProfile,
   updateStudentProfile,
   uploadDocuments,
@@ -20,6 +21,7 @@ const fileFields = [
 router.post('/upload', upload.fields(fileFields), uploadDocuments);
 
 router.get("/profile", studentProfile);
+router.get("/documents", getDocuments);
 router.put("/updateProfile", updateStudentProfile);
 
 export default router;
