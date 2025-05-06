@@ -90,6 +90,15 @@ export const uploadDocuments = async (req, res) => {
   try {
     const studentId = req.user.id;
 
+    const existDoc = await Document.findOne({studentId: studentId})
+    if(existDoc){
+      res.status(400).json({
+        success: false,
+        message: "Student already uploaded their document one time.",
+        data: existDoc,
+      });
+    }
+
     const fields = [
       "sscMarksheet",
       "hscMarksheet",
