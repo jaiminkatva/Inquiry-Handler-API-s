@@ -3,6 +3,7 @@ import Remark from "../models/Remark.js";
 import Student from "../models/Student.js";
 import Branch from "../models/Branch.js";
 import Document from "../models/Document.js";
+import Counselor from "../models/Counselor.js";
 
 export const getAppointedInquiry = async (req, res) => {
   try {
@@ -30,6 +31,23 @@ export const getSingleInquiry = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ msg: error.msg, error });
+  }
+};
+
+export const getAllBranch = async (req, res) => {
+  try {
+    const loginCounselor = await Counselor.findById(req.user.id);
+    const collegeId = loginCounselor.createdBy;
+    console.log(collegeId);
+    const branches = await Branch.find({
+      createdBy: loginCounselor.createdBy,
+    }).populate("course", "courseName");
+    res
+      .status(200)
+      .json({ total_branches: branches.length, branches: branches });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ msg: "server error" });
   }
 };
 
