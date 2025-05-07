@@ -107,19 +107,13 @@ export const addBranch = async (req, res) => {
       return res.status(401).json({ msg: "Unauthorized: No user ID found" });
     }
 
-    const { branchName, course, seats, remaining_seats, filled_seats } =
-      req.body;
-
-    const existingBranch = await Branch.findOne({ branchName });
-    if (existingBranch) {
-      return res.status(400).json({ msg: "Branch already exists" });
-    }
+    const { branchName, course, seats, filled_seats } = req.body;
 
     const newBranch = new Branch({
       branchName,
       course,
       seats,
-      remaining_seats,
+      remaining_seats: seats,
       filled_seats,
       createdBy: req.user.id,
     });
@@ -354,13 +348,13 @@ export const updateInquiry = async (req, res) => {
 export const getAllInquiryOfCollege = async (req, res) => {
   try {
     const inquiries = await Inquiry.find({ college: req.user.id })
-      .populate("course")
-      .populate("priority_one")
-      .populate("priority_two")
-      .populate("priority_three")
-      .populate("formFillBy")
-      .populate("college")
-      .populate("counselorName");
+      .populate("course", "courseName")
+      .populate("priority_one", "branchName")
+      .populate("priority_two", "branchName")
+      .populate("priority_three", "branchName")
+      .populate("formFillBy", "facultyName")
+      .populate("college", "collegeName")
+      .populate("counselorName", "counselorName");
 
     res.status(200).json({ inquiries });
   } catch (error) {

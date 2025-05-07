@@ -96,6 +96,7 @@ export const changeAdmissionStatus = async (req, res) => {
           aadharNo: inquiry.aadharNo,
           email: inquiry.email,
           password: inquiry.password,
+          course: inquiry.course,
           confirmBranch: confirmBranch,
           hscDetails: {
             board: inquiry.board,
@@ -114,53 +115,6 @@ export const changeAdmissionStatus = async (req, res) => {
         return res.status(201).json({
           message: "Student created and status updated to In-Process",
           student: newStudent,
-        });
-
-      case "Admitted":
-        // Update Inquiry Status
-        inquiry.status = "Admitted";
-        await inquiry.save();
-
-        // Find the student associated with this inquiry
-        const student = await Student.findOne({ inquiry_id: inquiry._id });
-        if (!student) {
-          return res
-            .status(404)
-            .json({ message: "Student not found for this inquiry" });
-        }
-
-        // Validate confirmBranch exists
-        if (!student.confirmBranch) {
-          return res
-            .status(400)
-            .json({ message: "confirmBranch not set for student" });
-        }
-
-        // Find the selected Branch using confirmBranch
-        const branch = await Branch.findById(student.confirmBranch);
-        if (!branch) {
-          return res.status(404).json({ message: "Branch not found" });
-        }
-
-        // Check seat availability
-        if (branch.remaining_seats <= 0) {
-          return res
-            .status(400)
-            .json({ message: "No remaining seats in this branch" });
-        }
-
-        // Update seat counters
-        branch.remaining_seats -= 1;
-        branch.filled_seats += 1;
-        await branch.save();
-
-        return res.status(200).json({
-          message: "Status updated to Admitted and branch seat count updated",
-          branchDetails: {
-            branchName: branch.branchName,
-            filled_seats: branch.filled_seats,
-            remaining_seats: branch.remaining_seats,
-          },
         });
 
       case "Cancel":
@@ -236,15 +190,14 @@ export const getStudentWithDocuments = async (req, res) => {
   }
 };
 
-
 export const verifyStudentDocument = async (req, res) => {
   const { id } = req.params;
   const { field, verified } = req.body;
 
-  if (!field || typeof verified !== 'boolean') {
+  if (!field || typeof verified !== "boolean") {
     return res.status(400).json({
       success: false,
-      message: 'Field and verified flag are required.',
+      message: "Field and verified flag are required.",
       data: null,
       statusCode: 400,
     });
@@ -263,26 +216,26 @@ export const verifyStudentDocument = async (req, res) => {
     if (!updatedDoc) {
       return res.status(404).json({
         success: false,
-        message: 'Document not found.',
+        message: "Document not found.",
         data: null,
         statusCode: 404,
       });
     }
 
     const requiredFields = [
-      'sscMarksheet',
-      'hscMarksheet',
-      'leavingCertificate',
-      'passportPhoto',
-      'adharCard',
-      'digitalSignature',
+      "sscMarksheet",
+      "hscMarksheet",
+      "leavingCertificate",
+      "passportPhoto",
+      "adharCard",
+      "digitalSignature",
     ];
 
     const allRequiredVerified = requiredFields.every(
-      field => updatedDoc[field]?.verified === true
+      (field) => updatedDoc[field]?.verified === true
     );
 
-    const newStatus = allRequiredVerified ? 'approved' : 'reupload';
+    const newStatus = allRequiredVerified ? "approved" : "reupload";
 
     if (updatedDoc.status !== newStatus) {
       updatedDoc.status = newStatus;
@@ -291,14 +244,16 @@ export const verifyStudentDocument = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: `Field "${field}" marked as ${verified ? 'verified' : 'unverified'}.`,
+      message: `Field "${field}" marked as ${
+        verified ? "verified" : "unverified"
+      }.`,
       data: updatedDoc,
       statusCode: 200,
     });
   } catch (err) {
     res.status(500).json({
       success: false,
-      message: 'Failed to verify document.',
+      message: "Failed to verify document.",
       data: null,
       statusCode: 500,
       error: err.message,

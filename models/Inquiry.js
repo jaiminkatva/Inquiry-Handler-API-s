@@ -51,7 +51,7 @@ const inquirySchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["Pending", "In-Process", "Admitted", "Cancel"],
+    enum: ["Pending", "In-Process", "Cancel"],
     default: "Pending",
   },
   admissionCategory: {

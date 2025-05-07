@@ -2,11 +2,6 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
 const counselorSchema = mongoose.Schema({
-  username: {
-    type: String,
-    required: true,
-    unique: true,
-  },
   counselorName: {
     type: String,
     required: true,

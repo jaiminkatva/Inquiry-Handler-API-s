@@ -53,6 +53,10 @@ const studentSchema = new mongoose.Schema({
     unique: true,
     required: true,
   },
+  course:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Course",
+  },
   confirmBranch: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Branch",

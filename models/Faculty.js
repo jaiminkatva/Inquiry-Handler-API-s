@@ -2,14 +2,9 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
 const facultySchema = new mongoose.Schema({
-  userName: {
-    type: String,
-    unique: true,
-  },
   facultyName: {
     type: String,
     required: true,
-    unique: true,
   },
   email: {
     type: String,
@@ -24,7 +19,7 @@ const facultySchema = new mongoose.Schema({
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "College"
+    ref: "College",
   },
   role: {
     type: String,
