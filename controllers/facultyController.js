@@ -167,3 +167,16 @@ export const showAllCounselor = async (req, res) => {
     res.status(500).json({ msg: "server error" });
   }
 };
+
+export const getCourseBranches = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const branches = await Branch.find({ course: id });
+    res
+      .status(200)
+      .json({ total_branches: branches.length, branches: branches });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ msg: "server error" });
+  }
+};

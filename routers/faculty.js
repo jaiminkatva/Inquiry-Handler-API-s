@@ -2,6 +2,7 @@ import express from "express";
 import {
   addInquiry,
   appointInquiry,
+  getCourseBranches,
   getFacultyInquiry,
   showAllBranch,
   showAllCounselor,
@@ -15,5 +16,6 @@ router.get("/course", showAllCourse);
 router.get("/counselor", showAllCounselor);
 router.get("/inquiry", getFacultyInquiry);
 router.post("/appointInquiry/:id", appointInquiry);
+router.get("/courseBranch/:id", getCourseBranches);
 
 export default router;

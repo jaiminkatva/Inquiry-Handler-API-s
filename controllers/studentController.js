@@ -90,8 +90,8 @@ export const uploadDocuments = async (req, res) => {
   try {
     const studentId = req.user.id;
 
-    const existDoc = await Document.findOne({studentId: studentId})
-    if(existDoc){
+    const existDoc = await Document.findOne({ studentId: studentId });
+    if (existDoc) {
       res.status(400).json({
         success: false,
         message: "Student already uploaded their document one time.",
@@ -133,6 +133,95 @@ export const uploadDocuments = async (req, res) => {
     console.log(err);
 
     res.status(500).json({ message: "Upload failed.", error: err.message });
+  }
+};
+
+export const uploadMissingDocuments = async (req, res) => {
+  try {
+    const studentId = req.user.id;
+
+    const fields = [
+      "sscMarksheet",
+      "hscMarksheet",
+      "leavingCertificate",
+      "passportPhoto",
+      "adharCard",
+      "digitalSignature",
+      "gujcatAdmitCard",
+      "gujcatScoreCard",
+      "jeeMainAdmitCard",
+      "jeeMainScoreCard",
+      "categoryCertificate",
+      "incomeCertificate",
+    ];
+
+    let existingDoc = await Document.findOne({ studentId });
+
+    // If no document exists yet, create a new one with available fields
+    if (!existingDoc) {
+      const documentData = { studentId, status: "pending" };
+
+      for (const field of fields) {
+        if (req.files[field]) {
+          documentData[field] = {
+            url: req.files[field][0].path,
+            uploadedAt: new Date(),
+            verified: false,
+          };
+        }
+      }
+
+      const newDoc = await Document.create(documentData);
+
+      return res.status(201).json({
+        success: true,
+        message: "Documents uploaded.",
+        data: newDoc,
+        statusCode: 201,
+      });
+    }
+
+    // Update only missing/null fields
+    let updated = false;
+
+    for (const field of fields) {
+      if (
+        (!existingDoc[field] || !existingDoc[field].url) &&
+        req.files[field]
+      ) {
+        existingDoc[field] = {
+          url: req.files[field][0].path,
+          uploadedAt: new Date(),
+          verified: false,
+        };
+        updated = true;
+      }
+    }
+
+    if (updated) {
+      await existingDoc.save();
+      return res.status(200).json({
+        success: true,
+        message: "Missing documents updated.",
+        data: existingDoc,
+        statusCode: 200,
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "No missing documents to update.",
+        data: existingDoc,
+        statusCode: 400,
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Upload failed.",
+      error: err.message,
+      statusCode: 500,
+    });
   }
 };
 

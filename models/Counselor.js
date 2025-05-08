@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
 const counselorSchema = mongoose.Schema({
-  counselorName: {
+  counselorName: { 
     type: String,
     required: true,
     trim: true,

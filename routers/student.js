@@ -4,6 +4,7 @@ import {
   studentProfile,
   updateStudentProfile,
   uploadDocuments,
+  uploadMissingDocuments,
 } from "../controllers/studentController.js";
 import upload from "../middlewares/upload.js";
 const router = Router();
@@ -19,7 +20,7 @@ const fileFields = [
 
 // Upload documents
 router.post('/upload', upload.fields(fileFields), uploadDocuments);
-
+router.post('/uploadMissingDoc', upload.fields(fileFields), uploadMissingDocuments);
 router.get("/profile", studentProfile);
 router.get("/documents", getDocuments);
 router.put("/updateProfile", updateStudentProfile);
