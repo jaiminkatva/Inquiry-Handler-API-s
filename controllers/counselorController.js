@@ -25,7 +25,14 @@ export const getAppointedInquiry = async (req, res) => {
 export const getSingleInquiry = async (req, res) => {
   try {
     const { id } = req.params;
-    const getInquiry = await Inquiry.findById(id);
+    const getInquiry = await Inquiry.findById(id)
+      .populate("formFillBy", "facultyName")
+      .populate("college", "collegeName")
+      .populate("counselorName", "counselorName")
+      .populate("course", "courseName")
+      .populate("priority_one", "branchName")
+      .populate("priority_two", "branchName")
+      .populate("priority_three", "branchName");
     const getRemarks = await Remark.find({ student: id });
     res.status(200).json({ inquiries: [getInquiry, getRemarks] });
   } catch (error) {
@@ -69,7 +76,8 @@ export const addRemarks = async (req, res) => {
 
 export const changeAdmissionStatus = async (req, res) => {
   try {
-    const { confirmBranch, inquiryId, status } = req.body;
+    const inquiryId = req.params;
+    const { confirmBranch, status } = req.body;
 
     const inquiry = await Inquiry.findById(inquiryId);
     if (!inquiry) {
