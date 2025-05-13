@@ -103,11 +103,30 @@ export const updateEntity = (Model) => async (req, res) => {
 // Branch
 export const addBranch = async (req, res) => {
   try {
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ msg: "Unauthorized: No user ID found" });
+    const { branchName, course, seats, filled_seats } = req.body;
+
+    // Check if the course exists and is created by the logged-in user
+    const existCourse = await Course.findOne({
+      _id: course,
+      createdBy: req.user.id,
+    });
+
+    if (!existCourse) {
+      return res.status(400).json({
+        message: "Course not found or not authorized",
+      });
     }
 
-    const { branchName, course, seats, filled_seats } = req.body;
+    const existBranch = await Branch.findOne({
+      branchName: branchName,
+      createdBy: req.user.id,
+    });
+
+    if (existBranch) {
+      return res.status(400).json({
+        message: "Branch already exist",
+      });
+    }
 
     const newBranch = new Branch({
       branchName,
@@ -120,12 +139,15 @@ export const addBranch = async (req, res) => {
 
     await newBranch.save();
 
-    res
-      .status(201)
-      .json({ msg: "Branch added successfully", branch: newBranch });
+    res.status(201).json({
+      message: "Branch added successfully",
+      data: newBranch,
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ msg: "Server error" });
+    res.status(500).json({
+      message: "Server error",
+    });
   }
 };
 
@@ -212,15 +234,17 @@ export const editBranch = async (req, res) => {
 // Course
 export const addCourse = async (req, res) => {
   try {
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ msg: "Unauthorized: No user ID found" });
-    }
-
     const { courseName } = req.body;
 
-    const existingCourse = await Course.findOne({ courseName });
-    if (existingCourse) {
-      return res.status(400).json({ msg: "Course already exists" });
+    const existCourse = await Course.findOne({
+      courseName: courseName,
+      createdBy: req.user.id,
+    });
+
+    if (existCourse) {
+      return res.status(400).json({
+        message: "Course already exist",
+      });
     }
 
     const newCourse = new Course({
