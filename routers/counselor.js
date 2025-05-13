@@ -16,6 +16,6 @@ router.get("/branch", getAllBranch);
 router.get("/studentWithDocument/:id", getStudentWithDocuments);
 router.get("/showAppointedInquiries/:id", getSingleInquiry);
 router.post("/remarks/:id", addRemarks);
-router.patch("/changeStatus/", changeAdmissionStatus);
+router.patch("/changeStatus/:id", changeAdmissionStatus);
 
 export default router;

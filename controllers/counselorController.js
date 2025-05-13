@@ -76,7 +76,7 @@ export const addRemarks = async (req, res) => {
 
 export const changeAdmissionStatus = async (req, res) => {
   try {
-    const inquiryId = req.params;
+    const inquiryId = req.params.id;
     const { confirmBranch, status } = req.body;
 
     const inquiry = await Inquiry.findById(inquiryId);
