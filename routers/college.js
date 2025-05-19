@@ -16,6 +16,7 @@ import {
   getSingleInquiry,
   updateInquiry,
   deleteInquiry,
+  getCourseWiseInquiryCount,
 } from "../controllers/collegeController.js";
 import Faculty from "../models/Faculty.js";
 import Counselor from "../models/Counselor.js";
@@ -40,6 +41,7 @@ router
   .get(getSingleInquiry)
   .put(updateInquiry)
   .delete(deleteInquiry);
+router.route("/dashboard").get(getCourseWiseInquiryCount);
 router.route("/branch").post(addBranch).get(showBranch);
 router.route("/branch/:id").patch(editBranch).delete(deleteBranch);
 router.route("/course").post(addCourse).get(showCourse);

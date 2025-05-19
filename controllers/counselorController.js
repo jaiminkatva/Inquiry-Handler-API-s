@@ -146,7 +146,8 @@ export const getStudent = async (req, res) => {
     })
       .populate("confirmBranch", "branchName")
       .populate("college", "collegeName")
-      .populate("counselorName", "counselorName");
+      .populate("counselorName", "counselorName")
+      .populate("course", "courseName");
     if (!students) {
       res.status(404).json({ msg: "Student not found" });
     }
@@ -163,6 +164,7 @@ export const getStudentWithDocuments = async (req, res) => {
       .populate("confirmBranch", "name")
       .populate("college", "name")
       .populate("counselorName", "fullName email")
+      .populate("course", "courseName")
       .lean();
 
     if (!student) {

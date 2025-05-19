@@ -1,6 +1,86 @@
 import Branch from "../models/Branch.js";
 import Course from "../models/Course.js";
 import Inquiry from "../models/Inquiry.js";
+import Student from "../models/Student.js";
+
+export const getCourseWiseInquiryCount = async (req, res) => {
+  try {
+    const resultInquiry = await Inquiry.aggregate([
+      {
+        $match: {
+          course: { $ne: null },
+        },
+      },
+      {
+        $group: {
+          _id: "$course",
+          inquiryCount: { $sum: 1 },
+          inquiries: { $push: "$$ROOT" }, // Collect all matching inquiries
+        },
+      },
+      {
+        $lookup: {
+          from: "courses",
+          localField: "_id",
+          foreignField: "_id",
+          as: "courseDetails",
+        },
+      },
+      {
+        $unwind: "$courseDetails",
+      },
+      {
+        $project: {
+          _id: 0,
+          courseId: "$courseDetails._id",
+          courseName: "$courseDetails.courseName",
+          inquiryCount: 1,
+          inquiries: 1, // include full inquiry documents
+        },
+      },
+    ]);
+    const resultStudent = await Student.aggregate([
+      {
+        $match: {
+          course: { $ne: null },
+        },
+      },
+      {
+        $group: {
+          _id: "$course",
+          inquiryCount: { $sum: 1 },
+          inquiries: { $push: "$$ROOT" }, // Collect all matching inquiries
+        },
+      },
+      {
+        $lookup: {
+          from: "courses",
+          localField: "_id",
+          foreignField: "_id",
+          as: "courseDetails",
+        },
+      },
+      {
+        $unwind: "$courseDetails",
+      },
+      {
+        $project: {
+          _id: 0,
+          courseId: "$courseDetails._id",
+          courseName: "$courseDetails.courseName",
+          inquiryCount: 1,
+          inquiries: 1, // include full inquiry documents
+        },
+      },
+    ]);
+
+    console.log(result);
+    res.status(200).json({ resultInquiry });
+  } catch (error) {
+    console.error("Error getting course-wise inquiry counts:", error);
+    throw error;
+  }
+};
 
 export const createEntity = (Model) => async (req, res) => {
   try {

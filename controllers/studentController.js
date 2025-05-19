@@ -92,7 +92,7 @@ export const uploadDocuments = async (req, res) => {
 
     const existDoc = await Document.findOne({ studentId: studentId });
     if (existDoc) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "Student already uploaded their document one time.",
         data: existDoc,
@@ -242,7 +242,7 @@ export const verifyDocumentStatus = async (req, res) => {
     const update = {};
     update[`${field}.verified`] = verified;
 
-    let updatedDoc = await StudentDocuments.findByIdAndUpdate(
+    let updatedDoc = await Document.findByIdAndUpdate(
       id,
       { $set: update },
       { new: true }
