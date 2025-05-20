@@ -2,83 +2,98 @@ import Branch from "../models/Branch.js";
 import Course from "../models/Course.js";
 import Inquiry from "../models/Inquiry.js";
 import Student from "../models/Student.js";
+import mongoose from "mongoose";
 
 export const getCourseWiseInquiryCount = async (req, res) => {
   try {
-    const resultInquiry = await Inquiry.aggregate([
+    const userId = new mongoose.Types.ObjectId(req.user.id);
+
+    // ✅ Course-wise Inquiry Count (include 0 inquiries)
+    const resultInquiry = await Course.aggregate([
       {
-        $match: {
-          course: { $ne: null },
-        },
-      },
-      {
-        $group: {
-          _id: "$course",
-          inquiryCount: { $sum: 1 },
-          inquiries: { $push: "$$ROOT" }, // Collect all matching inquiries
-        },
+        $match: { createdBy: userId },
       },
       {
         $lookup: {
-          from: "courses",
-          localField: "_id",
-          foreignField: "_id",
-          as: "courseDetails",
+          from: "inquiries",
+          let: { courseId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$course", "$$courseId"] },
+                    { $eq: ["$college", userId] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "relatedInquiries",
         },
-      },
-      {
-        $unwind: "$courseDetails",
       },
       {
         $project: {
           _id: 0,
-          courseId: "$courseDetails._id",
-          courseName: "$courseDetails.courseName",
-          inquiryCount: 1,
-          inquiries: 1, // include full inquiry documents
-        },
-      },
-    ]);
-    const resultStudent = await Student.aggregate([
-      {
-        $match: {
-          course: { $ne: null },
-        },
-      },
-      {
-        $group: {
-          _id: "$course",
-          inquiryCount: { $sum: 1 },
-          inquiries: { $push: "$$ROOT" }, // Collect all matching inquiries
-        },
-      },
-      {
-        $lookup: {
-          from: "courses",
-          localField: "_id",
-          foreignField: "_id",
-          as: "courseDetails",
-        },
-      },
-      {
-        $unwind: "$courseDetails",
-      },
-      {
-        $project: {
-          _id: 0,
-          courseId: "$courseDetails._id",
-          courseName: "$courseDetails.courseName",
-          inquiryCount: 1,
-          inquiries: 1, // include full inquiry documents
+          courseId: "$_id",
+          courseName: 1,
+          inquiryCount: { $size: "$relatedInquiries" },
         },
       },
     ]);
 
-    console.log(result);
-    res.status(200).json({ resultInquiry });
+    // ✅ Branch-wise Student Count (include 0 students)
+    const resultStudent = await Branch.aggregate([
+      {
+        $match: { createdBy: userId },
+      },
+      {
+        $lookup: {
+          from: "students",
+          let: { branchId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$confirmBranch", "$$branchId"] },
+                    { $eq: ["$college", userId] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "relatedStudents",
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          branchId: "$_id",
+          branchName: 1,
+          course: 1,
+          studentCount: { $size: "$relatedStudents" },
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      message: "Filtered course-wise inquiries and branch-wise student data",
+      data: {
+        courseWiseInquiry: resultInquiry,
+        branchWiseStudents: resultStudent,
+      },
+      statusCode: 200,
+    });
   } catch (error) {
-    console.error("Error getting course-wise inquiry counts:", error);
-    throw error;
+    console.error("Error getting filtered course/branch-wise data:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+      statusCode: 500,
+    });
   }
 };
 
